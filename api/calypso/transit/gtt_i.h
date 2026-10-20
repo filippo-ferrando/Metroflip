@@ -10,7 +10,7 @@
 #define GTT_CONTRACT_COUNT 4
 #define GTT_EVENT_COUNT    3
 
-// Timestamps are minutes since 2005-01-01 00:00 local time
+// Timestamps are minutes since 2005-01-01 00:00 in standard time (CET, no DST)
 #define GTT_EPOCH 1104537600
 
 typedef struct {

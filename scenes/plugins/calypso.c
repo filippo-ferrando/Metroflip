@@ -600,8 +600,25 @@ static void calypso_dump_ticketing_files(
     }
 }
 
+/* Unix time of 01:00 UTC on the last Sunday of a 31-day month, when EU
+ * summer time starts (March) or ends (October) */
+static uint32_t gtt_eu_dst_switch(uint16_t year, uint8_t month) {
+    DateTime last_day = {.hour = 1, .day = 31, .month = month, .year = year};
+    uint32_t timestamp = datetime_datetime_to_timestamp(&last_day);
+    uint32_t weekday = (timestamp / 86400 + 4) % 7; // 1970-01-01 was a Thursday, 0 = Sunday
+    return timestamp - weekday * 86400;
+}
+
+/* The card counts in Italian standard time (CET, UTC+1) all year round, so
+ * add an hour while EU summer time is in effect to get the local time */
 static void gtt_minutes_to_datetime(uint32_t minutes, DateTime* dt) {
-    datetime_timestamp_to_datetime(GTT_EPOCH + minutes * 60, dt);
+    uint32_t local = GTT_EPOCH + minutes * 60;
+    uint32_t utc = local - 3600;
+    datetime_timestamp_to_datetime(local, dt);
+    if(utc >= gtt_eu_dst_switch(dt->year, 3) && utc < gtt_eu_dst_switch(dt->year, 10)) {
+        local += 3600;
+    }
+    datetime_timestamp_to_datetime(local, dt);
 }
 
 static uint32_t gtt_get_u24(const uint8_t* data) {
